@@ -1,0 +1,89 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+pom.xml.bak
+release.properties
+dependency-reduced-pom.xml
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+.m2/
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.classpath
+.project
+.settings/
+.factorypath
+*.sublime-workspace
+*.sublime-project
+
+# Build & Runtime
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Logs
+*.log
+logs/
+*.log.*
+.log
+
+# OS
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.properties.local
+application-local.yml
+application-dev.yml
+
+# Session & Temporary
+session.log
+.session/
+tmp/
+temp/
+
+# Docker
+.docker/
+
+# Node (if applicable)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Coverage
+coverage/
+*.lcov
+
+# Misc
+.gitkeep
+flux-warehouse/memory:test-db
+flux-warehouse/memory:test-db-query
