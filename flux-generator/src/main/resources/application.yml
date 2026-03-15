@@ -1,0 +1,20 @@
+spring:
+  webflux:
+    base-path: /api
+
+app:
+  gateway-url: ${GATEWAY_URL:http://localhost:8081}
+  api-key: ${FLUX_API_KEY:changeme}
+  load-test:
+    requests-per-second: 1000
+    duration-seconds: 60
+    concurrency: 100
+    output-file: /tmp/load-test-results.log
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    com.flux: DEBUG
