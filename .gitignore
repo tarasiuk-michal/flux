@@ -85,5 +85,3 @@ coverage/
 
 # Misc
 .gitkeep
-flux-warehouse/memory:test-db
-flux-warehouse/memory:test-db-query
