@@ -1,0 +1,24 @@
+spring:
+  webflux:
+    base-path: /api
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      acks: 1
+      properties:
+        linger.ms: 10
+        batch.size: 16384
+    topic: data-stream
+
+app:
+  api-key: ${FLUX_API_KEY:changeme}
+  warehouse-url: http://flux-warehouse:8082
+
+server:
+  port: 8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
