@@ -2,6 +2,10 @@ package com.flux.warehouse.controller;
 
 import com.flux.warehouse.dto.DataDTO;
 import com.flux.warehouse.service.QueryService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,21 +16,26 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 @RestController
 @RequestMapping("/query")
 public class QueryController {
 
-    private final QueryService queryService;
-    private static final Duration QUERY_TIMEOUT = Duration.ofSeconds(5);
+    private static final Logger log = LoggerFactory.getLogger(QueryController.class);
 
-    public QueryController(QueryService queryService) {
+    private final QueryService queryService;
+    private final Duration queryTimeout;
+
+    public QueryController(QueryService queryService,
+                           @Value("${app.query-timeout:5s}") Duration queryTimeout) {
         this.queryService = queryService;
+        this.queryTimeout = queryTimeout;
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<?> query(
-            @RequestParam(required = true) String market,
+            @RequestParam String market,
             @RequestParam(required = false) String symbol,
             @RequestParam(required = false) Integer limit) {
 
@@ -35,11 +44,16 @@ public class QueryController {
                 List<DataDTO> results = queryService.queryPrices(market, symbol, limit);
                 return Mono.just((Object) ResponseEntity.ok(results));
             } catch (IllegalArgumentException e) {
-                return Mono.just((Object) ResponseEntity.badRequest().build());
-            } catch (Exception e) {
-                return Mono.just((Object) ResponseEntity.status(503).build());
+                log.warn("Bad query request: {}", e.getMessage());
+                return Mono.just((Object) ResponseEntity.badRequest().body(e.getMessage()));
+            } catch (DataAccessException e) {
+                log.error("Database error during query: {}", e.getMessage());
+                return Mono.just((Object) ResponseEntity.status(503).body("Database unavailable"));
             }
-        }).timeout(QUERY_TIMEOUT)
-        .onErrorResume(e -> Mono.just((Object) ResponseEntity.status(504).build()));
+        }).timeout(queryTimeout)
+        .onErrorResume(TimeoutException.class, e -> {
+            log.warn("Query timed out for market={}, symbol={}", market, symbol);
+            return Mono.just((Object) ResponseEntity.status(504).body("Query timed out"));
+        });
     }
 }
