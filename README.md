@@ -35,7 +35,25 @@ flux-generator (8080)          flux-warehouse (8082)
 - Kafka broker (localhost:9092)
 - Docker (optional, for Kafka: `docker run -d -p 9092:9092 apache/kafka:latest`)
 
-## Quick Start
+## Quick Start (Docker)
+
+**Fastest way to run the entire system with Kafka, all three services, and proper networking:**
+
+```bash
+# Deploy everything (builds images, starts containers)
+./scripts/deploy.sh
+
+# Verify services are running
+curl http://localhost:8880/api/health     # warehouse
+curl http://localhost:8881/api/health     # gateway
+curl http://localhost:8882/api/health     # generator
+```
+
+See [INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md) for full Docker Compose guide, networking modes, configuration, and troubleshooting.
+
+## Quick Start (Local Development)
+
+**Run modules directly without Docker (requires Kafka running):**
 
 ### 1. Start Kafka
 ```bash
@@ -45,19 +63,19 @@ sleep 10
 
 ### 2. Build & Run
 
-**flux-warehouse** (8082 — consumes Kafka, serves queries):
+**flux-warehouse** (8880 — consumes Kafka, serves queries):
 ```bash
 cd flux-warehouse
 mvn spring-boot:run
 ```
 
-**flux-generator** (8080 — publishes mock data):
+**flux-generator** (8882 — publishes mock data):
 ```bash
 cd flux-generator
 mvn spring-boot:run
 ```
 
-**flux-gateway** (8081 — optional proxy):
+**flux-gateway** (8881 — API gateway):
 ```bash
 cd flux-gateway
 mvn spring-boot:run
@@ -67,19 +85,19 @@ mvn spring-boot:run
 
 ```bash
 # Warehouse health
-curl http://localhost:8082/api/health
+curl http://localhost:8880/api/health
 
 # Query data (once generator has published)
-curl "http://localhost:8082/api/query?market=warsaw&symbol=PKO&limit=10"
+curl "http://localhost:8880/api/query?market=warsaw&symbol=PKO&limit=10"
 ```
 
 ## Modules
 
 | Module | Port | Status | Role |
 |--------|------|--------|------|
-| **flux-warehouse** | 8082 | ✅ Complete | Kafka consumer → SQLite persistence → Query API |
-| **flux-gateway** | 8081 | 🔨 In progress | HTTP gateway, request routing |
-| **flux-generator** | 8080 | 🔨 In progress | Mock market data publisher |
+| **flux-warehouse** | 8880 | ✅ Complete | Kafka consumer → SQLite persistence → Query API |
+| **flux-gateway** | 8881 | ✅ Complete | HTTP gateway, Kafka producer, warehouse proxy |
+| **flux-generator** | 8882 | ✅ Complete | Load testing tool for market data generation |
 
 ### flux-warehouse (Complete)
 
@@ -128,7 +146,7 @@ spring:
     driver-class-name: org.sqlite.JDBC
 
 server:
-  port: 8082  # warehouse; 8081=gateway, 8080=generator
+  port: 8880  # warehouse; 8881=gateway, 8882=generator
 ```
 
 Override with environment variables:
@@ -154,12 +172,12 @@ KAFKA_BOOTSTRAP=kafka.prod.internal:9092 mvn spring-boot:run
 
 ```bash
 # Warehouse metrics
-curl http://localhost:8082/actuator/metrics/warehouse.records.consumed
-curl http://localhost:8082/actuator/metrics/warehouse.records.saved
-curl http://localhost:8082/actuator/metrics/warehouse.records.failed
+curl http://localhost:8880/actuator/metrics/warehouse.records.consumed
+curl http://localhost:8880/actuator/metrics/warehouse.records.saved
+curl http://localhost:8880/actuator/metrics/warehouse.records.failed
 
 # List all available metrics
-curl http://localhost:8082/actuator/metrics
+curl http://localhost:8880/actuator/metrics
 ```
 
 ## Testing

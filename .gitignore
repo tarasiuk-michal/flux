@@ -85,3 +85,28 @@ coverage/
 
 # Misc
 .gitkeep
+
+# Shell & User Config
+.bash_profile
+.bashrc
+.profile
+.zprofile
+.zshrc
+.gitconfig
+
+# Claude IDE & Tools
+.claude/
+.mcp.json
+.ripgreprc
+
+# Git Internal Files (shouldn't be tracked)
+.gitmodules
+config
+hooks
+objects
+refs
+HEAD
+
+# IDE
+.vscode/
+.idea/
