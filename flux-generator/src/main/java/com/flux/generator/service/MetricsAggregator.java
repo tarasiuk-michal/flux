@@ -53,7 +53,7 @@ public class MetricsAggregator {
             }
         }
 
-        log.info("RPS: {}/{}, Success: {:.2f}%, P99: {:.2f}ms",
+        log.info("RPS: {}/{}, Success: {}%, P99: {}ms",
             String.format("%.0f", result.actualRps),
             targetRps,
             String.format("%.2f", result.successRate),
