@@ -1,5 +1,6 @@
 package com.flux.generator.service;
 
+import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -90,6 +91,16 @@ public class LoadTestService {
 
     public TestState getTestResults(String testId) {
         return completedTests.get(testId);
+    }
+
+    @PreDestroy
+    void shutdown() {
+        activeTests.values().forEach(state -> {
+            if (state.disposable != null && !state.disposable.isDisposed()) {
+                state.disposable.dispose();
+            }
+        });
+        activeTests.clear();
     }
 
     public static class TestState {
