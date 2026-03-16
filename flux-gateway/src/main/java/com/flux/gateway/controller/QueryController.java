@@ -1,6 +1,7 @@
 package com.flux.gateway.controller;
 
 import com.flux.gateway.exception.ErrorResponse;
+import jakarta.validation.constraints.Positive;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,9 +26,9 @@ public class QueryController {
 
     @GetMapping
     public Mono<ResponseEntity<Object>> query(
-            @RequestParam(required = false) String market,
+            @RequestParam String market,
             @RequestParam(required = false) String symbol,
-            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false) @Positive Integer limit,
             org.springframework.web.server.ServerWebExchange exchange) {
 
         String correlationId = (String) exchange.getAttribute("X-Correlation-Id");
@@ -36,24 +37,14 @@ public class QueryController {
         }
         final String finalCorrelationId = correlationId;
 
-        // Build the warehouse query URL
-        String warehouseQuery = "/api/query";
-        if (market != null || symbol != null || limit != null) {
-            warehouseQuery += "?";
-            StringBuilder params = new StringBuilder();
-            if (market != null) {
-                params.append("market=").append(market);
-            }
-            if (symbol != null) {
-                if (params.length() > 0) params.append("&");
-                params.append("symbol=").append(symbol);
-            }
-            if (limit != null) {
-                if (params.length() > 0) params.append("&");
-                params.append("limit=").append(limit);
-            }
-            warehouseQuery += params;
+        StringBuilder params = new StringBuilder("market=").append(market);
+        if (symbol != null) {
+            params.append("&symbol=").append(symbol);
         }
+        if (limit != null) {
+            params.append("&limit=").append(limit);
+        }
+        String warehouseQuery = "/api/query?" + params;
 
         return webClient.get()
             .uri(warehouseQuery)
@@ -62,12 +53,10 @@ public class QueryController {
             .timeout(Duration.ofSeconds(10))
             .map(body -> ResponseEntity.status(HttpStatus.OK).body((Object) body))
             .onErrorResume(e -> {
-                // Check if timeout
                 if (e instanceof java.util.concurrent.TimeoutException) {
                     ErrorResponse error = new ErrorResponse(504, "Warehouse query timeout", finalCorrelationId);
                     return Mono.just(ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT).body((Object) error));
                 }
-                // All other connection errors → 503
                 ErrorResponse error = new ErrorResponse(503, "Warehouse unreachable", finalCorrelationId);
                 return Mono.just(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body((Object) error));
             });
