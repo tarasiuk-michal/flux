@@ -57,4 +57,9 @@ public class DataMessage {
     public void setMarket(String market) {
         this.market = market;
     }
+
+    @Override
+    public String toString() {
+        return "DataMessage{symbol='" + symbol + "', market='" + market + "'}";
+    }
 }

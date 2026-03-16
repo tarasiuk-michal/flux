@@ -60,4 +60,9 @@ public class Market {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    @Override
+    public String toString() {
+        return "Market{id=" + id + ", code='" + code + "'}";
+    }
 }

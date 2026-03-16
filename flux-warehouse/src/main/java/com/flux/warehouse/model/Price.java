@@ -85,4 +85,9 @@ public class Price {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    @Override
+    public String toString() {
+        return "Price{id=" + id + ", price=" + price + ", volume=" + volume + "}";
+    }
 }
