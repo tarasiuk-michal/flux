@@ -3,6 +3,7 @@ package com.flux.generator.controller;
 import com.flux.generator.model.LoadTestRequest;
 import com.flux.generator.model.LoadTestResult;
 import com.flux.generator.service.LoadTestService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +22,7 @@ public class LoadTestController {
     }
 
     @PostMapping("/start")
-    public Mono<ResponseEntity<Map<String, String>>> startTest(@RequestBody LoadTestRequest request) {
+    public Mono<ResponseEntity<Map<String, String>>> startTest(@Valid @RequestBody LoadTestRequest request) {
         // Validation
         if (request.requestsPerSecond() <= 0 || request.durationSeconds() <= 0 || request.concurrency() <= 0) {
             return Mono.just(ResponseEntity.badRequest()

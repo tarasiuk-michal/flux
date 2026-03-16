@@ -1,7 +1,9 @@
 package com.flux.generator.model;
 
+import jakarta.validation.constraints.Positive;
+
 public record LoadTestRequest(
-    int requestsPerSecond,
-    int durationSeconds,
-    int concurrency
+    @Positive int requestsPerSecond,
+    @Positive int durationSeconds,
+    @Positive int concurrency
 ) {}
