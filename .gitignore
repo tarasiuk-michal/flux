@@ -101,12 +101,8 @@ coverage/
 
 # Git Internal Files (shouldn't be tracked)
 .gitmodules
-config
-hooks
-objects
-refs
-HEAD
-
-# IDE
-.vscode/
-.idea/
+/config
+/hooks
+/objects
+/refs
+/HEAD
