@@ -40,5 +40,5 @@ logging:
 app:
   network-mode: ${NETWORK_MODE:local}
   machine-fqdn: ${MACHINE_FQDN:localhost}
-  api-key: ${FLUX_API_KEY:test-key-change-me}
+  api-key: ${FLUX_API_KEY}
   warehouse-url: ${WAREHOUSE_URL:http://localhost:8880}

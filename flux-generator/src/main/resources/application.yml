@@ -32,7 +32,7 @@ logging:
 app:
   network-mode: ${NETWORK_MODE:local}
   machine-fqdn: ${MACHINE_FQDN:localhost}
-  api-key: ${FLUX_API_KEY:test-key-change-me}
+  api-key: ${FLUX_API_KEY}
   gateway-url: ${GATEWAY_URL:http://localhost:8881}
   load-test:
     requests-per-second: 1000

@@ -5,6 +5,7 @@ import com.flux.gateway.model.DataPayload;
 import com.flux.gateway.service.KafkaProducerService;
 import com.flux.gateway.service.MetricsService;
 import io.micrometer.core.instrument.Timer;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,8 +21,15 @@ import java.security.MessageDigest;
 @RequestMapping("/data")
 public class DataController {
 
-    @Value("${app.api-key:changeme}")
+    @Value("${app.api-key}")
     private String apiKey;
+
+    @PostConstruct
+    void validateApiKey() {
+        if (apiKey == null || apiKey.length() < 16) {
+            throw new IllegalStateException("app.api-key must be at least 16 characters");
+        }
+    }
 
     private final KafkaProducerService kafkaProducerService;
     private final MetricsService metricsService;

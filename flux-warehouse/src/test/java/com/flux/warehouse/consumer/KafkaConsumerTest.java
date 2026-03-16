@@ -32,7 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @Testcontainers
 @TestPropertySource(properties = {
     "spring.datasource.url=jdbc:sqlite:memory:test-db-kafka",
-    "spring.jpa.hibernate.ddl-auto=none"
+    "spring.jpa.hibernate.ddl-auto=none",
+    "app.api-key=test-api-key-for-tests"
 })
 class KafkaConsumerTest {
 

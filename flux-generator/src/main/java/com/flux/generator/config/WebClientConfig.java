@@ -3,6 +3,7 @@ package com.flux.generator.config;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,8 +21,15 @@ public class WebClientConfig {
     @Value("${app.gateway-url:http://localhost:8881}")
     private String gatewayUrl;
 
-    @Value("${app.api-key:changeme}")
+    @Value("${app.api-key}")
     private String apiKey;
+
+    @PostConstruct
+    void validateApiKey() {
+        if (apiKey == null || apiKey.length() < 16) {
+            throw new IllegalStateException("app.api-key must be at least 16 characters");
+        }
+    }
 
     @Bean
     public WebClient webClient() {
