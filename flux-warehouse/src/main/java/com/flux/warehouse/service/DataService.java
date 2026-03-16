@@ -7,12 +7,12 @@ import com.flux.warehouse.repository.CompanyRepository;
 import com.flux.warehouse.repository.PriceRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class DataService {
@@ -21,17 +21,17 @@ public class DataService {
     private final PriceRepository priceRepository;
     private final CompanyRepository companyRepository;
     private final MetricsService metricsService;
-    private Map<String, Company> companyCache;
+    private final Map<String, Company> companyCache;
 
     public DataService(PriceRepository priceRepository, CompanyRepository companyRepository, MetricsService metricsService) {
         this.priceRepository = priceRepository;
         this.companyRepository = companyRepository;
         this.metricsService = metricsService;
+        this.companyCache = new ConcurrentHashMap<>();
         initializeCompanyCache();
     }
 
     private void initializeCompanyCache() {
-        companyCache = new HashMap<>();
         List<Company> allCompanies = companyRepository.findAllWithMarket();
         for (Company company : allCompanies) {
             String key = buildCacheKey(company.getSymbol(), company.getMarket().getCode());
@@ -47,33 +47,30 @@ public class DataService {
     public void processMessage(DataMessage message) {
         metricsService.incrementConsumed();
 
+        if (!validateMessage(message)) {
+            metricsService.incrementFailed();
+            return;
+        }
+
+        String cacheKey = buildCacheKey(message.getSymbol(), message.getMarket());
+        Company company = companyCache.get(cacheKey);
+
+        if (company == null) {
+            log.warn("Unknown company: symbol={}, market={}", message.getSymbol(), message.getMarket());
+            metricsService.incrementFailed();
+            return;
+        }
+
         try {
-            // Validate required fields
-            if (!validateMessage(message)) {
-                metricsService.incrementFailed();
-                return;
-            }
-
-            // Lookup company from cache
-            String cacheKey = buildCacheKey(message.getSymbol(), message.getMarket());
-            Company company = companyCache.get(cacheKey);
-
-            if (company == null) {
-                log.warn("Unknown company: symbol={}, market={}", message.getSymbol(), message.getMarket());
-                metricsService.incrementFailed();
-                return;
-            }
-
-            // Save price record
             io.micrometer.core.instrument.Timer.Sample sample = metricsService.startTimer();
             Price price = new Price(company, message.getPrice(), message.getVolume(), message.getTimestamp());
             priceRepository.save(price);
             metricsService.stopTimer(sample);
-
             metricsService.incrementSaved();
-        } catch (Exception e) {
-            log.error("Error processing message: {}", message, e);
+        } catch (DataAccessException e) {
+            log.error("Database error saving price for symbol={}: {}", message.getSymbol(), e.getMessage());
             metricsService.incrementFailed();
+            throw e;
         }
     }
 
@@ -100,5 +97,4 @@ public class DataService {
         }
         return true;
     }
-
 }
