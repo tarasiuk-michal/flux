@@ -1,10 +1,14 @@
 package com.flux.gateway.controller;
 
 import com.flux.gateway.exception.ErrorResponse;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,6 +18,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 
+@Validated
 @RestController
 @RequestMapping("/query")
 public class QueryController {
@@ -26,9 +31,9 @@ public class QueryController {
 
     @GetMapping
     public Mono<ResponseEntity<Object>> query(
-            @RequestParam String market,
-            @RequestParam(required = false) String symbol,
-            @RequestParam(required = false) @Positive Integer limit,
+            @RequestParam @Size(min = 1, max = 20) String market,
+            @RequestParam(required = false) @Pattern(regexp = "[A-Z0-9]{1,10}") String symbol,
+            @RequestParam(required = false) @Positive @Max(1000) Integer limit,
             org.springframework.web.server.ServerWebExchange exchange) {
 
         String correlationId = (String) exchange.getAttribute("X-Correlation-Id");

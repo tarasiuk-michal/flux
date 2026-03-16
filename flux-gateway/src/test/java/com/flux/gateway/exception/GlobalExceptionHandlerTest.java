@@ -1,8 +1,11 @@
 package com.flux.gateway.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.support.WebExchangeBindException;
+
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -23,6 +26,18 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getStatus()).isEqualTo(400);
         assertThat(response.getBody().getMessage()).contains("Validation error");
+    }
+
+    @Test
+    void handleConstraintViolation_returns400() {
+        ConstraintViolationException ex = new ConstraintViolationException("symbol: must match pattern", Set.of());
+
+        ResponseEntity<ErrorResponse> response = handler.handleConstraintViolation(ex);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getStatus()).isEqualTo(400);
+        assertThat(response.getBody().getMessage()).isEqualTo("Invalid request parameters");
     }
 
     @Test

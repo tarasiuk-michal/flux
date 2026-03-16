@@ -1,5 +1,6 @@
 package com.flux.gateway.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -19,6 +20,14 @@ public class GlobalExceptionHandler {
         String correlationId = MDC.get(CORRELATION_ID_HEADER);
         log.warn("Validation error: {}", e.getMessage());
         ErrorResponse response = new ErrorResponse(400, "Validation error: " + e.getMessage(), correlationId);
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException e) {
+        String correlationId = MDC.get(CORRELATION_ID_HEADER);
+        log.warn("Constraint violation: {}", e.getMessage());
+        ErrorResponse response = new ErrorResponse(400, "Invalid request parameters", correlationId);
         return ResponseEntity.badRequest().body(response);
     }
 
