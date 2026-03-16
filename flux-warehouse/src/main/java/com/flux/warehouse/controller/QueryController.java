@@ -2,12 +2,17 @@ package com.flux.warehouse.controller;
 
 import com.flux.warehouse.dto.DataDTO;
 import com.flux.warehouse.service.QueryService;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,6 +23,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+@Validated
 @RestController
 @RequestMapping("/query")
 public class QueryController {
@@ -35,9 +41,9 @@ public class QueryController {
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<ResponseEntity<?>> query(
-            @RequestParam String market,
-            @RequestParam(required = false) String symbol,
-            @RequestParam(required = false) Integer limit) {
+            @RequestParam @Size(min = 1, max = 20) String market,
+            @RequestParam(required = false) @Pattern(regexp = "[A-Z0-9]{1,10}") String symbol,
+            @RequestParam(required = false) @Positive @Max(1000) Integer limit) {
 
         return Mono.<ResponseEntity<?>>defer(() -> {
             try {

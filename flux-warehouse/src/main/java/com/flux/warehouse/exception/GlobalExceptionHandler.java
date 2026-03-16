@@ -1,5 +1,6 @@
 package com.flux.warehouse.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,13 @@ import org.springframework.web.server.ServerWebInputException;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException e) {
+        log.warn("Constraint violation: {}", e.getMessage());
+        ErrorResponse response = new ErrorResponse(400, "Invalid request parameters");
+        return ResponseEntity.badRequest().body(response);
+    }
 
     @ExceptionHandler(WebExchangeBindException.class)
     public ResponseEntity<ErrorResponse> handleMissingParameter(WebExchangeBindException e) {

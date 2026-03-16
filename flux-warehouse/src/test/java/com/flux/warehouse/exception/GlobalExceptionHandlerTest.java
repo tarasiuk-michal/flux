@@ -1,9 +1,12 @@
 package com.flux.warehouse.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.server.ServerWebInputException;
+
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -12,6 +15,16 @@ import static org.mockito.Mockito.when;
 class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
+
+    @Test
+    void handleConstraintViolation_returns400() {
+        ConstraintViolationException ex = new ConstraintViolationException("symbol must match pattern", Set.of());
+
+        ResponseEntity<ErrorResponse> response = handler.handleConstraintViolation(ex);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+        assertThat(response.getBody().getMessage()).isEqualTo("Invalid request parameters");
+    }
 
     @Test
     void handleMissingParameter_returns400() {

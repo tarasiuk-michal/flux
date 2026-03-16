@@ -18,7 +18,8 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 @TestPropertySource(properties = {
     "spring.datasource.url=jdbc:sqlite:memory:test-db-query",
     "spring.jpa.hibernate.ddl-auto=none",
-    "spring.kafka.bootstrap-servers=localhost:19092"
+    "spring.kafka.bootstrap-servers=localhost:19092",
+    "app.api-key=test-api-key-for-tests"
 })
 class QueryControllerTest {
 
@@ -116,5 +117,21 @@ class QueryControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectBodyList(Object.class).hasSize(2);
+    }
+
+    @Test
+    void testQueryWithInvalidSymbol() {
+        webTestClient.get()
+            .uri("/api/query?market=warsaw&symbol=invalid!@#")
+            .exchange()
+            .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void testQueryWithLimitExceedingMax() {
+        webTestClient.get()
+            .uri("/api/query?market=warsaw&limit=9999")
+            .exchange()
+            .expectStatus().isBadRequest();
     }
 }
