@@ -13,7 +13,7 @@ import java.time.Duration;
 @Configuration
 public class WebClientConfig {
 
-    @Value("${app.warehouse-url:http://flux-warehouse:8082}")
+    @Value("${app.warehouse-url:http://flux-warehouse:8880}")
     private String warehouseUrl;
 
     @Bean
@@ -23,8 +23,8 @@ public class WebClientConfig {
             .build();
 
         HttpClient httpClient = HttpClient.create(connectionProvider)
-            .responseTimeout(Duration.ofSeconds(10))
-            .responseTimeout(Duration.ofSeconds(5)); // connection timeout
+            .option(io.netty.channel.ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+            .responseTimeout(Duration.ofSeconds(10));
 
         return WebClient.builder()
             .baseUrl(warehouseUrl)

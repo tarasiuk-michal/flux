@@ -32,7 +32,7 @@ public class DataService {
 
     private void initializeCompanyCache() {
         companyCache = new HashMap<>();
-        List<Company> allCompanies = companyRepository.findAll();
+        List<Company> allCompanies = companyRepository.findAllWithMarket();
         for (Company company : allCompanies) {
             String key = buildCacheKey(company.getSymbol(), company.getMarket().getCode());
             companyCache.put(key, company);

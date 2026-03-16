@@ -88,7 +88,7 @@ get_all_services_status() {
     echo -e "${BLUE}Service Status:${NC}"
     echo "────────────────────────────────────────"
 
-    local services=("zookeeper" "kafka" "flux-warehouse" "flux-gateway" "flux-generator")
+    local services=("kafka" "flux-warehouse" "flux-gateway" "flux-generator")
     for service in "${services[@]}"; do
         local status=$(get_service_status "$service")
         local icon="${GREEN}✓${NC}"
@@ -204,7 +204,6 @@ run_full_diagnostics() {
     check_port_available 8881 "flux-gateway"
     check_port_available 8882 "flux-generator"
     check_port_available 9092 "kafka"
-    check_port_available 2181 "zookeeper"
     echo
 
     # Health checks
