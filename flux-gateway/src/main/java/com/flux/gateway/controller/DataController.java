@@ -13,6 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+
 @RestController
 @RequestMapping("/data")
 public class DataController {
@@ -49,7 +52,9 @@ public class DataController {
             return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body((Object) error));
         }
 
-        if (!providedKey.equals(apiKey)) {
+        if (!MessageDigest.isEqual(
+                providedKey.getBytes(StandardCharsets.UTF_8),
+                apiKey.getBytes(StandardCharsets.UTF_8))) {
             metricsService.recordFailedRequest();
             ErrorResponse error = new ErrorResponse(401, "Invalid API key", finalCorrelationId);
             return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body((Object) error));
