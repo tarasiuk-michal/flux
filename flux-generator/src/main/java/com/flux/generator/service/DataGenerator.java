@@ -7,12 +7,10 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class DataGenerator {
-
-    private static final Random random = new Random();
     private static final Map<String, List<String>> symbolsByMarket = new HashMap<>();
     private static final Map<String, Map<String, Double>> basePrices = new HashMap<>();
     private static final List<String> markets;
@@ -65,15 +63,16 @@ public class DataGenerator {
     }
 
     public MarketData generatePayload() {
-        String market = markets.get(random.nextInt(markets.size()));
+        ThreadLocalRandom rng = ThreadLocalRandom.current();
+        String market = markets.get(rng.nextInt(markets.size()));
         List<String> symbols = symbolsByMarket.get(market);
-        String symbol = symbols.get(random.nextInt(symbols.size()));
+        String symbol = symbols.get(rng.nextInt(symbols.size()));
 
         double basePrice = basePrices.get(market).get(symbol);
-        double variance = (random.nextDouble() - 0.5) * 0.01 * basePrice; // ±0.5%
+        double variance = (rng.nextDouble() - 0.5) * 0.01 * basePrice; // ±0.5%
         double price = basePrice + variance;
 
-        long volume = 100_000L + random.nextLong(9_900_000L); // 100k-10M
+        long volume = 100_000L + rng.nextLong(9_900_000L); // 100k-10M
 
         return new MarketData(
             symbol,
