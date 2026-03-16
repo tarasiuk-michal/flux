@@ -2,7 +2,7 @@ spring:
   webflux:
     base-path: /api
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
       group-id: flux-warehouse
       auto-offset-reset: earliest
@@ -19,13 +19,38 @@ spring:
       ddl-auto: none
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.SQLiteDialect
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
 
 server:
-  port: 8082
+  port: 8880
+  shutdown: graceful
 
 management:
   endpoints:
     web:
       exposure:
         include: health,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.flux.warehouse: DEBUG
+    org.springframework.kafka: WARN
+    org.apache.kafka: WARN
+
+app:
+  network-mode: ${NETWORK_MODE:local}
+  machine-fqdn: ${MACHINE_FQDN:localhost}
+  api-key: ${FLUX_API_KEY:test-key-change-me}
