@@ -1,0 +1,36 @@
+spring:
+  webflux:
+    base-path: /api
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+server:
+  port: 8882
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.flux.generator: DEBUG
+
+app:
+  network-mode: ${NETWORK_MODE:local}
+  machine-fqdn: ${MACHINE_FQDN:localhost}
+  api-key: ${FLUX_API_KEY:test-key-change-me}
+  gateway-url: ${GATEWAY_URL:http://localhost:8881}
