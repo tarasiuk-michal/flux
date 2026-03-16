@@ -155,6 +155,18 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.4</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <java.io.tmpdir>/tmp/claude-1000/mvn-tmp</java.io.tmpdir>
+                        <jna.tmpdir>/tmp/claude-1000/mvn-tmp</jna.tmpdir>
+                        <mockito.mock-maker>mock-maker</mockito.mock-maker>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
