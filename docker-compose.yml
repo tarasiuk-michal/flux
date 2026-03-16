@@ -1,0 +1,146 @@
+version: '3.8'
+
+# Default logging configuration for all services
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+    labels: "service={{service}}"
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_SYNC_LIMIT: 5
+      ZOOKEEPER_INIT_LIMIT: 5
+    ports:
+      - "2181:2181"
+    networks:
+      - flux-network
+    logging: *default-logging
+    healthcheck:
+      test: [ "CMD", "echo", "ruok", "|", "nc", "localhost", "2181" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: on-failure:3
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "9092:9092"
+    networks:
+      - flux-network
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    logging: *default-logging
+    healthcheck:
+      test: [ "CMD", "kafka-broker-api-versions.sh", "--bootstrap-server=localhost:9092" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: on-failure:3
+
+  flux-warehouse:
+    build:
+      context: ./flux-warehouse
+      dockerfile: Dockerfile
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: flux-warehouse
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      NETWORK_MODE: ${NETWORK_MODE:-local}
+      MACHINE_FQDN: ${MACHINE_FQDN:-thinkpad.antelope-centauri.ts.net}
+      FLUX_API_KEY: ${FLUX_API_KEY:-test-key-change-me}
+    ports:
+      - "8880:8880"
+    networks:
+      - flux-network
+    volumes:
+      - warehouse-data:/app/data
+    logging: *default-logging
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8880/api/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    restart: on-failure:2
+
+  flux-gateway:
+    build:
+      context: ./flux-gateway
+      dockerfile: Dockerfile
+    depends_on:
+      kafka:
+        condition: service_healthy
+      flux-warehouse:
+        condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: flux-gateway
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      NETWORK_MODE: ${NETWORK_MODE:-local}
+      MACHINE_FQDN: ${MACHINE_FQDN:-thinkpad.antelope-centauri.ts.net}
+      FLUX_API_KEY: ${FLUX_API_KEY:-test-key-change-me}
+    ports:
+      - "8881:8881"
+    networks:
+      - flux-network
+    logging: *default-logging
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8881/api/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    restart: on-failure:2
+
+  flux-generator:
+    build:
+      context: ./flux-generator
+      dockerfile: Dockerfile
+    depends_on:
+      flux-gateway:
+        condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: flux-generator
+      NETWORK_MODE: ${NETWORK_MODE:-local}
+      MACHINE_FQDN: ${MACHINE_FQDN:-thinkpad.antelope-centauri.ts.net}
+      FLUX_API_KEY: ${FLUX_API_KEY:-test-key-change-me}
+    ports:
+      - "8882:8882"
+    networks:
+      - flux-network
+    logging: *default-logging
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8882/api/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    restart: on-failure:2
+
+networks:
+  flux-network:
+    driver: bridge
+
+volumes:
+  kafka-data:
+  warehouse-data:
