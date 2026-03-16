@@ -48,6 +48,7 @@ public class QueryController {
 
         return webClient.get()
             .uri(warehouseQuery)
+            .header("X-Correlation-Id", finalCorrelationId)
             .retrieve()
             .bodyToMono(String.class)
             .timeout(Duration.ofSeconds(10))
