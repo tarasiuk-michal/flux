@@ -9,38 +9,23 @@ x-logging: &default-logging
     labels: "service={{service}}"
 
 services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_SYNC_LIMIT: 5
-      ZOOKEEPER_INIT_LIMIT: 5
-    ports:
-      - "2181:2181"
-    networks:
-      - flux-network
-    logging: *default-logging
-    healthcheck:
-      test: [ "CMD", "echo", "ruok", "|", "nc", "localhost", "2181" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
-    restart: on-failure:3
-
   kafka:
     image: confluentinc/cp-kafka:7.5.0
-    depends_on:
-      zookeeper:
-        condition: service_healthy
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_LOG_MESSAGE_FORMAT_VERSION: "3.0"
+      CLUSTER_ID: dgyEUD64SCOUi2gXyMGB1w==
     ports:
       - "9092:9092"
     networks:
@@ -49,10 +34,10 @@ services:
       - kafka-data:/var/lib/kafka/data
     logging: *default-logging
     healthcheck:
-      test: [ "CMD", "kafka-broker-api-versions.sh", "--bootstrap-server=localhost:9092" ]
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/9092'"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
       start_period: 30s
     restart: on-failure:3
 
@@ -96,6 +81,7 @@ services:
     environment:
       SPRING_APPLICATION_NAME: flux-gateway
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      APP_WAREHOUSE_URL: http://flux-warehouse:8880
       NETWORK_MODE: ${NETWORK_MODE:-local}
       MACHINE_FQDN: ${MACHINE_FQDN:-thinkpad.antelope-centauri.ts.net}
       FLUX_API_KEY: ${FLUX_API_KEY:-test-key-change-me}
@@ -121,6 +107,7 @@ services:
         condition: service_healthy
     environment:
       SPRING_APPLICATION_NAME: flux-generator
+      GATEWAY_URL: http://flux-gateway:8881
       NETWORK_MODE: ${NETWORK_MODE:-local}
       MACHINE_FQDN: ${MACHINE_FQDN:-thinkpad.antelope-centauri.ts.net}
       FLUX_API_KEY: ${FLUX_API_KEY:-test-key-change-me}
