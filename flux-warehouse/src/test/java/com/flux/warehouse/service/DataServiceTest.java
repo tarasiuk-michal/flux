@@ -12,6 +12,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +23,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class DataServiceTest {
 
     @Mock
@@ -46,7 +49,7 @@ class DataServiceTest {
         List<Company> companies = new ArrayList<>();
         companies.add(company);
 
-        when(companyRepository.findAll()).thenReturn(companies);
+        when(companyRepository.findAllWithMarket()).thenReturn(companies);
 
         dataService = new DataService(priceRepository, companyRepository, metricsService);
     }

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -eo pipefail
 
 # Color codes for output
 RED='\033[0;31m'
@@ -42,7 +42,7 @@ echo
 echo -e "${BLUE}Testing flux-warehouse...${NC}"
 cd "$PROJECT_ROOT/flux-warehouse"
 if [ -f "pom.xml" ]; then
-    if ./mvnw clean verify 2>&1 | tee /tmp/warehouse-test.log; then
+    if mvn clean verify 2>&1 | tee /tmp/warehouse-test.log; then
         print_result "flux-warehouse" 0
     else
         print_result "flux-warehouse" 1
@@ -58,7 +58,7 @@ echo
 echo -e "${BLUE}Testing flux-gateway...${NC}"
 cd "$PROJECT_ROOT/flux-gateway"
 if [ -f "pom.xml" ]; then
-    if ./mvnw clean verify 2>&1 | tee /tmp/gateway-test.log; then
+    if mvn clean verify 2>&1 | tee /tmp/gateway-test.log; then
         print_result "flux-gateway" 0
     else
         print_result "flux-gateway" 1
@@ -74,7 +74,7 @@ echo
 echo -e "${BLUE}Testing flux-generator...${NC}"
 cd "$PROJECT_ROOT/flux-generator"
 if [ -f "pom.xml" ]; then
-    if ./mvnw clean verify 2>&1 | tee /tmp/generator-test.log; then
+    if mvn clean verify 2>&1 | tee /tmp/generator-test.log; then
         print_result "flux-generator" 0
     else
         print_result "flux-generator" 1
