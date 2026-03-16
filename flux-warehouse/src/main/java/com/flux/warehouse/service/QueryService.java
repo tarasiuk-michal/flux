@@ -3,11 +3,8 @@ package com.flux.warehouse.service;
 import com.flux.warehouse.dto.DataDTO;
 import com.flux.warehouse.repository.MarketRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +21,7 @@ public class QueryService {
 
     public List<DataDTO> queryPrices(String market, String symbol, Integer limit) {
         // Validate market exists
-        if (!marketRepository.findByCode(market).isPresent()) {
+        if (marketRepository.findByCode(market).isEmpty()) {
             throw new IllegalArgumentException("Unknown market: " + market);
         }
 
@@ -54,17 +51,12 @@ public class QueryService {
             params.add(queryLimit);
         }
 
-        return jdbcTemplate.query(sql, params.toArray(), new RowMapper<DataDTO>() {
-            @Override
-            public DataDTO mapRow(ResultSet rs, int rowNum) throws SQLException {
-                return new DataDTO(
-                    rs.getString("symbol"),
-                    rs.getString("market"),
-                    rs.getDouble("price"),
-                    rs.getLong("volume"),
-                    rs.getString("timestamp")
-                );
-            }
-        });
+        return jdbcTemplate.query(sql, params.toArray(), (rs, rowNum) -> new DataDTO(
+            rs.getString("symbol"),
+            rs.getString("market"),
+            rs.getDouble("price"),
+            rs.getLong("volume"),
+            rs.getString("timestamp")
+        ));
     }
 }
