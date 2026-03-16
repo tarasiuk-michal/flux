@@ -1,6 +1,5 @@
 package com.flux.warehouse.consumer;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.flux.warehouse.model.DataMessage;
 import com.flux.warehouse.service.DataService;
 import org.slf4j.Logger;

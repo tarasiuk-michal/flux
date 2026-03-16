@@ -34,26 +34,26 @@ public class QueryController {
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<?> query(
+    public Mono<ResponseEntity<?>> query(
             @RequestParam String market,
             @RequestParam(required = false) String symbol,
             @RequestParam(required = false) Integer limit) {
 
-        return Mono.defer(() -> {
+        return Mono.<ResponseEntity<?>>defer(() -> {
             try {
                 List<DataDTO> results = queryService.queryPrices(market, symbol, limit);
-                return Mono.just((Object) ResponseEntity.ok(results));
+                return Mono.just(ResponseEntity.ok(results));
             } catch (IllegalArgumentException e) {
                 log.warn("Bad query request: {}", e.getMessage());
-                return Mono.just((Object) ResponseEntity.badRequest().body(e.getMessage()));
+                return Mono.just(ResponseEntity.badRequest().body(e.getMessage()));
             } catch (DataAccessException e) {
                 log.error("Database error during query: {}", e.getMessage());
-                return Mono.just((Object) ResponseEntity.status(503).body("Database unavailable"));
+                return Mono.just(ResponseEntity.status(503).body("Database unavailable"));
             }
         }).timeout(queryTimeout)
         .onErrorResume(TimeoutException.class, e -> {
             log.warn("Query timed out for market={}, symbol={}", market, symbol);
-            return Mono.just((Object) ResponseEntity.status(504).body("Query timed out"));
+            return Mono.just(ResponseEntity.status(504).body("Query timed out"));
         });
     }
 }

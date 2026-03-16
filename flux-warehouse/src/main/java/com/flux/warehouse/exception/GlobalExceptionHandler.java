@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.support.WebExchangeBindException;
+import org.springframework.web.server.ServerWebInputException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -15,6 +16,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(WebExchangeBindException.class)
     public ResponseEntity<ErrorResponse> handleMissingParameter(WebExchangeBindException e) {
         log.warn("Validation error: {}", e.getMessage());
+        ErrorResponse response = new ErrorResponse(400, "Missing or invalid parameters");
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(ServerWebInputException.class)
+    public ResponseEntity<ErrorResponse> handleMissingInput(ServerWebInputException e) {
+        log.warn("Missing input: {}", e.getMessage());
         ErrorResponse response = new ErrorResponse(400, "Missing or invalid parameters");
         return ResponseEntity.badRequest().body(response);
     }
