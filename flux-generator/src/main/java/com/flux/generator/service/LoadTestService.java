@@ -37,12 +37,13 @@ public class LoadTestService {
         long intervalNanos = 1_000_000_000L / requestsPerSecond;
 
         // Run the load test asynchronously
-        Flux.interval(Duration.ofNanos(intervalNanos))
+        Disposable disposable = Flux.interval(Duration.ofNanos(intervalNanos))
             .take((long) requestsPerSecond * durationSeconds)
+            .onBackpressureDrop(dropped ->
+                log.warn("Load test {} backpressure: tick dropped", testId))
             .flatMap(
                 i -> executor.sendPayload(generator.generatePayload()),
-                concurrency,
-                10000  // onBackpressureBuffer size
+                concurrency
             )
             .doOnNext(result -> {
                 state.totalRequests.incrementAndGet();
@@ -52,13 +53,7 @@ public class LoadTestService {
                     state.failureRequests.incrementAndGet();
                 }
             })
-            .doOnError(e -> {
-                log.warn("Load test {} encountered error", testId, e);
-                state.failureRequests.addAndGet(100); // Rough estimate
-            })
-            .onBackpressureBuffer(10000, dropped -> {
-                log.warn("Load test {} backpressure: request dropped", testId);
-            })
+            .doOnError(e -> log.warn("Load test {} encountered error", testId, e))
             .doFinally(signalType -> {
                 state.status = "COMPLETED";
                 state.endTime = Instant.now();
@@ -72,6 +67,7 @@ public class LoadTestService {
                 error -> log.error("Load test {} failed", testId, error)
             );
 
+        state.disposable = disposable;
         return testId;
     }
 
@@ -82,6 +78,9 @@ public class LoadTestService {
     public TestState stopTest(String testId) {
         TestState state = activeTests.remove(testId);
         if (state != null) {
+            if (state.disposable != null && !state.disposable.isDisposed()) {
+                state.disposable.dispose();
+            }
             state.status = "STOPPED";
             state.endTime = Instant.now();
             completedTests.put(testId, state);
@@ -103,6 +102,7 @@ public class LoadTestService {
         public AtomicLong failureRequests = new AtomicLong(0);
         public int targetRps;
         public int durationSeconds;
+        public transient Disposable disposable;
 
         public TestState(String testId, Instant startTime, int targetRps, int durationSeconds) {
             this.testId = testId;
