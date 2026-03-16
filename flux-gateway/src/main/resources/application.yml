@@ -9,7 +9,7 @@ spring:
     topic: data-stream
   lifecycle:
     timeout-per-shutdown-phase: 30s
-
+    
 server:
   port: 8881
   shutdown: graceful
