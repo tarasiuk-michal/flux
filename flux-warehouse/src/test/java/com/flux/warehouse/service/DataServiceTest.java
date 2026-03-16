@@ -15,11 +15,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import org.springframework.dao.DataIntegrityViolationException;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -167,6 +169,69 @@ class DataServiceTest {
         dataService.processMessage(message);
 
         verify(priceRepository, never()).save(any());
+        verify(metricsService).incrementFailed();
+    }
+
+    @Test
+    void testEmptySymbol() {
+        DataMessage message = new DataMessage();
+        message.setSymbol("");
+        message.setPrice(50.0);
+        message.setVolume(1000L);
+        message.setTimestamp("2025-03-15T10:00:00Z");
+        message.setMarket("warsaw");
+
+        dataService.processMessage(message);
+
+        verify(priceRepository, never()).save(any());
+        verify(metricsService).incrementFailed();
+    }
+
+    @Test
+    void testEmptyTimestamp() {
+        DataMessage message = new DataMessage();
+        message.setSymbol("PKO");
+        message.setPrice(50.0);
+        message.setVolume(1000L);
+        message.setTimestamp("");
+        message.setMarket("warsaw");
+
+        dataService.processMessage(message);
+
+        verify(priceRepository, never()).save(any());
+        verify(metricsService).incrementFailed();
+    }
+
+    @Test
+    void testEmptyMarket() {
+        DataMessage message = new DataMessage();
+        message.setSymbol("PKO");
+        message.setPrice(50.0);
+        message.setVolume(1000L);
+        message.setTimestamp("2025-03-15T10:00:00Z");
+        message.setMarket("");
+
+        dataService.processMessage(message);
+
+        verify(priceRepository, never()).save(any());
+        verify(metricsService).incrementFailed();
+    }
+
+    @Test
+    void testDatabaseError_incrementsFailedAndRethrows() {
+        when(priceRepository.save(any())).thenThrow(new DataIntegrityViolationException("constraint"));
+        when(metricsService.startTimer()).thenReturn(io.micrometer.core.instrument.Timer.start());
+
+        DataMessage message = new DataMessage();
+        message.setSymbol("PKO");
+        message.setPrice(50.0);
+        message.setVolume(1000L);
+        message.setTimestamp("2025-03-15T10:00:00Z");
+        message.setMarket("warsaw");
+
+        assertThrows(org.springframework.dao.DataAccessException.class,
+            () -> dataService.processMessage(message));
+
         verify(metricsService).incrementFailed();
     }
 }

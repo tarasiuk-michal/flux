@@ -12,7 +12,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @TestPropertySource(properties = {
     "spring.datasource.url=jdbc:sqlite:memory:test-db",
-    "spring.jpa.hibernate.ddl-auto=none"
+    "spring.jpa.hibernate.ddl-auto=none",
+    "spring.kafka.bootstrap-servers=localhost:19092"
 })
 class DatabaseInitializerTest {
 
