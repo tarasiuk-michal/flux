@@ -15,7 +15,7 @@ Spring Boot WebFlux load generator. Produces realistic market data payloads and 
 POST /api/load-test/start
   → DataGenerator creates payloads
   → Flux.interval emits at target rate
-  → WebClient POSTs to flux-gateway (http://flux-gateway:8081/api/data)
+  → WebClient POSTs to flux-gateway (http://flux-gateway:8881/api/data)
   → Log response + latency
   → Aggregate metrics
 ```
@@ -27,7 +27,7 @@ spring:
     base-path: /api
 
 app:
-  gateway-url: http://flux-gateway:8081
+  gateway-url: http://flux-gateway:8881
   api-key: ${FLUX_API_KEY:changeme}
   load-test:
     requests-per-second: 1000
@@ -36,7 +36,7 @@ app:
     output-file: /tmp/load-test-results.log
 
 server:
-  port: 8080
+  port: 8882
 ```
 
 ## Package Structure
@@ -102,8 +102,8 @@ Final report: total, success/fail counts, actual RPS, min/max/avg/p50/p95/p99 la
 ## Running
 ```bash
 ./mvnw spring-boot:run
-curl http://localhost:8080/api/health
-curl -X POST http://localhost:8080/api/load-test/start \
+curl http://localhost:8882/api/health
+curl -X POST http://localhost:8882/api/load-test/start \
   -H "Content-Type: application/json" \
   -d '{"requestsPerSecond":1000,"durationSeconds":60,"concurrency":100}'
 ```
@@ -114,4 +114,4 @@ java -Xmx2G -Xms2G -XX:+UseZGC -jar generator-app.jar
 ```
 
 ## Dependencies
-Requires **flux-gateway** to be running on port 8081 first.
+Requires **flux-gateway** to be running on port 8881 first.

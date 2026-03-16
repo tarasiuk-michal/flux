@@ -48,7 +48,7 @@ spring:
       ddl-auto: validate
 
 server:
-  port: 8082
+  port: 8880
 
 management:
   endpoints:
@@ -196,16 +196,16 @@ ORDER BY p.id DESC LIMIT ?
 ## Running
 ```bash
 ./mvnw spring-boot:run
-curl http://localhost:8082/api/health
-curl "http://localhost:8082/api/query?market=warsaw&symbol=PKO&limit=100"
-curl http://localhost:8082/actuator/metrics/warehouse.records.consumed
+curl http://localhost:8880/api/health
+curl "http://localhost:8880/api/query?market=warsaw&symbol=PKO&limit=100"
+curl http://localhost:8880/actuator/metrics/warehouse.records.consumed
 ```
 
 ## Startup Order
 1. Kafka broker
-2. flux-gateway (8081)
-3. flux-warehouse (8082) — waits for Kafka messages
-4. flux-generator (8080) — starts sending
+2. flux-gateway (8881)
+3. flux-warehouse (8880) — waits for Kafka messages
+4. flux-generator (8882) — starts sending
 
 ## Monitoring
 - SQLite file: `data/flux-data.db` (grows with records)

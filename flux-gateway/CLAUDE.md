@@ -18,7 +18,7 @@ POST /api/data
   → Return 202 Accepted immediately
 
 GET /api/query?market=warsaw&symbol=PKO&limit=100
-  → WebClient proxy to flux-warehouse:8082/api/query
+  → WebClient proxy to flux-warehouse:8880/api/query
   → Return 200 with results
 ```
 
@@ -38,10 +38,10 @@ spring:
 
 app:
   api-key: ${FLUX_API_KEY:changeme}
-  warehouse-url: http://flux-warehouse:8082
+  warehouse-url: http://flux-warehouse:8880
 
 server:
-  port: 8081
+  port: 8881
 ```
 
 ## Package Structure
@@ -118,8 +118,8 @@ Response body: `{"timestamp": "...", "status": N, "message": "...", "correlation
 docker run --rm -p 9092:9092 apache/kafka:latest
 
 ./mvnw spring-boot:run
-curl http://localhost:8081/api/health
-curl -X POST http://localhost:8081/api/data \
+curl http://localhost:8881/api/health
+curl -X POST http://localhost:8881/api/data \
   -H "X-API-Key: changeme" \
   -H "Content-Type: application/json" \
   -d '{"symbol":"PKO","price":50.0,"volume":1000,"timestamp":"2025-03-15T10:00:00Z","market":"warsaw"}'

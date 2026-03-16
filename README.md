@@ -5,7 +5,7 @@ Distributed system for market data ingestion, persistence, and querying. Three S
 ## Architecture
 
 ```
-flux-generator (8080)          flux-warehouse (8082)
+flux-generator (8882)          flux-warehouse (8880)
   Market Data Source             Kafka Consumer
        │                              │
        │  Kafka: data-stream          │
@@ -16,7 +16,7 @@ flux-generator (8080)          flux-warehouse (8082)
                         ┌─────────────┘
                         │
                   GET /api/query
-                  flux-gateway (8081)
+                  flux-gateway (8881)
 ```
 
 ## Tech Stack
