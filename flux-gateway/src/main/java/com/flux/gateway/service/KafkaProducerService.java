@@ -1,13 +1,13 @@
 package com.flux.gateway.service;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import com.flux.gateway.model.DataPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
 
@@ -27,24 +27,19 @@ public class KafkaProducerService {
     }
 
     public Mono<Void> publish(DataPayload payload) {
-        String jsonPayload;
-        try {
-            jsonPayload = objectMapper.writeValueAsString(payload);
-        } catch (JacksonException e) {
-            return Mono.error(e);
-        }
-
-        return Mono.<Void>create(sink -> {
-            kafkaTemplate.send(TOPIC, jsonPayload).whenComplete((result, ex) -> {
-                if (ex == null) {
-                    log.info("Published {} from {}", payload.getSymbol(), payload.getMarket());
-                    sink.success();
-                } else {
-                    log.error("Failed to publish message: {}", payload, ex);
-                    sink.error(ex);
-                }
-            });
-        }).timeout(TIMEOUT);
+        return Mono.fromCallable(() -> objectMapper.writeValueAsString(payload))
+            .subscribeOn(Schedulers.boundedElastic())
+            .flatMap(json -> Mono.<Void>create(sink ->
+                kafkaTemplate.send(TOPIC, json).whenComplete((result, ex) -> {
+                    if (ex == null) {
+                        log.info("Published {} from {}", payload.getSymbol(), payload.getMarket());
+                        sink.success();
+                    } else {
+                        log.error("Failed to publish message: {}", payload, ex);
+                        sink.error(ex);
+                    }
+                })
+            ))
+            .timeout(TIMEOUT);
     }
-
 }
